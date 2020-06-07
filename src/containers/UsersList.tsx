@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Box } from "rebass";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
 
 import { usersSelector } from "domain/users";
 import UserPanel from "components/UserPanel";
@@ -16,14 +17,15 @@ export default () => {
   );
 
   return (
-    <Box>
+    <List>
       {users.map((user) => (
-        <UserPanel
-          fetchRepositories={dispatchFetchRepositories}
-          key={user.id}
-          user={user}
-        />
+        <ListItem key={user.id}>
+          <UserPanel
+            fetchRepositories={dispatchFetchRepositories}
+            user={user}
+          />
+        </ListItem>
       ))}
-    </Box>
+    </List>
   );
 };

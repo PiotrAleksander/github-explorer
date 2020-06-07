@@ -1,4 +1,5 @@
 import React from "react";
+import Container from "@material-ui/core/Container";
 
 import ThemeProvider from "ThemeProvider";
 import StateProvider from "StateProvider";
@@ -9,10 +10,14 @@ function App() {
   return (
     <StateProvider>
       <ThemeProvider>
-        <header>
-          <SearchBox />
-          <UsersList />
-        </header>
+        <Container maxWidth="sm">
+          <header>
+            <SearchBox />
+          </header>
+          <main>
+            <UsersList />
+          </main>
+        </Container>
       </ThemeProvider>
     </StateProvider>
   );

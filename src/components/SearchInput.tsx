@@ -1,14 +1,14 @@
 import React from "react";
-import { Box } from "rebass";
+import TextField from "@material-ui/core/TextField";
+
 import { ISearchInputProps } from "types";
 
 export default ({ onChange, username }: ISearchInputProps) => (
-  <Box>
-    <input
-      value={username}
-      onChange={onChange}
-      type="text"
-      placeholder="Enter username"
-    />
-  </Box>
+  <TextField
+    fullWidth
+    variant="filled"
+    value={username}
+    onChange={onChange}
+    placeholder="Enter username"
+  />
 );

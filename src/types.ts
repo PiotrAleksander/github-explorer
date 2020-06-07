@@ -16,6 +16,7 @@ export interface IRepositoryCardProps {
 
 export interface ISearchButtonProps {
   onClick: (event: ReactMouseEvent<HTMLButtonElement, MouseEvent>) => void;
+  children: ReactNode;
 }
 
 export interface ISearchInputProps {

@@ -1,6 +1,7 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { Box } from "rebass";
+import List from "@material-ui/core/List";
+import ListItem from "@material-ui/core/ListItem";
 
 import { IRepositoriesListProps } from "types";
 import { userRepositoriesSelector } from "domain/repositories";
@@ -12,14 +13,14 @@ export default ({ userId }: IRepositoriesListProps) => {
     userRepositoriesSelector(state, userId)
   );
 
-  console.log(repositories);
-
   return (
-    <Box>
+    <List>
       {repositories &&
         repositories.map((repository) => (
-          <RepositoryCard key={repository.id} repository={repository} />
+          <ListItem key={repository.id}>
+            <RepositoryCard repository={repository} />
+          </ListItem>
         ))}
-    </Box>
+    </List>
   );
 };
