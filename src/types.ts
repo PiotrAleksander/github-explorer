@@ -1,8 +1,12 @@
 import { ReactNode, MouseEvent as ReactMouseEvent, ChangeEvent } from "react";
 
-import { IRepository } from "./domain/types";
+import { IRepository, IUser } from "./domain/types";
 
 export interface IThemeProviderProps {
+  children: ReactNode;
+}
+
+export interface IStateProviderProps {
   children: ReactNode;
 }
 
@@ -17,4 +21,13 @@ export interface ISearchButtonProps {
 export interface ISearchInputProps {
   username: string;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+}
+
+export interface IRepositoriesListProps {
+  userId: number;
+}
+
+export interface IUserPanelProps {
+  user: IUser;
+  fetchRepositories: Function;
 }

@@ -53,7 +53,6 @@ export interface IRepositoryResponse {
   id: number;
   name: string;
   description: string;
-  html_url: string;
   stargazers_count: number;
   owner: {
     id: number;
@@ -62,15 +61,16 @@ export interface IRepositoryResponse {
 
 export interface IRepository {
   id: number;
+  userId: number;
   name: string;
   description: string;
-  htmlUrl: string;
   stargazersCount: number;
 }
 
 export interface IFetchRepositoriesAction {
   type: RepositoriesActionTypes.FETCH_REPOSITORIES;
   payload: {
+    userId: number;
     reposUrl: string;
   };
 }
@@ -78,6 +78,7 @@ export interface IFetchRepositoriesAction {
 export interface IFetchRepositoriesFulfilledAction {
   type: RepositoriesActionTypes.FETCH_REPOSITORIES_FULFILLED;
   payload: {
+    userId: number;
     repositories: Array<IRepository>;
   };
 }
@@ -88,7 +89,7 @@ export type RepositoriesAction =
 
 interface IRepositoriesState {
   byId: {
-    [key: number]: IRepository;
+    [key: number]: Array<IRepository>;
   };
   allIds: Array<number>;
 }

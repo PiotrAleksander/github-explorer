@@ -1,11 +1,11 @@
 // ducks
 
 import { ActionsObservable } from "redux-observable";
-import { filter, switchMap, map, debounceTime } from "rxjs/operators";
+import { filter, switchMap, map, throttleTime } from "rxjs/operators";
 import { ajax } from "rxjs/ajax";
 import { combineReducers } from "redux";
-
 import { isOfType } from "typesafe-actions";
+
 import {
   UsersActionTypes,
   DomainAction,
@@ -15,16 +15,17 @@ import {
   IUsersResponse,
   IDomainState,
 } from "./types";
-
 import { GITHUB_API_URL } from "./config";
 
 // action creators
-export const fetchUser = (username: string) => ({
+export const fetchUsers = (username: string) => ({
   type: UsersActionTypes.FETCH_USERS,
-  payload: username,
+  payload: {
+    username,
+  },
 });
 
-const fetchUserFulfilled = (
+const fetchUsersFulfilled = (
   users: Array<IUser>
 ): IFetchUsersFulfilledAction => ({
   type: UsersActionTypes.FETCH_USERS_FULFILLED,
@@ -42,10 +43,10 @@ const User = (userResponse: IUserResponse): IUser => ({
 });
 
 // epics
-export const fetchUserEpic = (action$: ActionsObservable<DomainAction>) =>
+export const fetchUsersEpic = (action$: ActionsObservable<DomainAction>) =>
   action$.pipe(
     filter(isOfType(UsersActionTypes.FETCH_USERS)),
-    debounceTime(1000),
+    throttleTime(1000),
     switchMap((action) =>
       ajax
         .getJSON<IUsersResponse>(
@@ -53,7 +54,7 @@ export const fetchUserEpic = (action$: ActionsObservable<DomainAction>) =>
         )
         .pipe(
           map((response: IUsersResponse) => response.items.map(User)),
-          map((users) => fetchUserFulfilled(users))
+          map((users) => fetchUsersFulfilled(users))
         )
     )
   );
@@ -63,7 +64,8 @@ const allIds = (state = [], action: DomainAction) => {
   switch (action.type) {
     case UsersActionTypes.FETCH_USERS_FULFILLED:
       const ids = action.payload.users.map((user) => user.id);
-      return [...state, ...ids];
+      const set = new Set([...state, ...ids]);
+      return [...set];
     default:
       return state;
   }
@@ -72,9 +74,10 @@ const allIds = (state = [], action: DomainAction) => {
 const byId = (state = {}, action: DomainAction) => {
   switch (action.type) {
     case UsersActionTypes.FETCH_USERS_FULFILLED:
-      const users = action.payload.users.map((user) => ({
-        [user.id]: user,
-      }));
+      const users = action.payload.users.reduce(
+        (acc, user) => ({ ...acc, [user.id]: user }),
+        {}
+      );
       return {
         ...state,
         ...users,
@@ -88,5 +91,5 @@ export const usersReducer = combineReducers({ allIds, byId });
 
 // selectors
 
-const users = (state: IDomainState) =>
+export const usersSelector = (state: IDomainState) =>
   state.users.allIds.map((id) => state.users.byId[id]);

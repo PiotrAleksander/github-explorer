@@ -4,6 +4,7 @@ import { ActionsObservable } from "redux-observable";
 import { filter, map, switchMap } from "rxjs/operators";
 import { ajax } from "rxjs/ajax";
 import { combineReducers } from "redux";
+import { createSelector } from "reselect";
 
 import { isOfType } from "typesafe-actions";
 import {
@@ -12,19 +13,25 @@ import {
   IFetchRepositoriesFulfilledAction,
   IRepository,
   IRepositoryResponse,
+  IDomainState,
 } from "./types";
 
 // action creators
-export const fetchRepository = (repositoryname: string) => ({
+export const fetchRepositories = (userId: number, reposUrl: string) => ({
   type: RepositoriesActionTypes.FETCH_REPOSITORIES,
-  payload: repositoryname,
+  payload: {
+    userId,
+    reposUrl,
+  },
 });
 
-const fetchRepositoryFulfilled = (
+const fetchRepositoriesFulfilled = (
+  userId: number,
   repositories: Array<IRepository>
 ): IFetchRepositoriesFulfilledAction => ({
   type: RepositoriesActionTypes.FETCH_REPOSITORIES_FULFILLED,
   payload: {
+    userId,
     repositories,
   },
 });
@@ -32,20 +39,24 @@ const fetchRepositoryFulfilled = (
 // mapper
 const Repository = (repositoryResponse: IRepositoryResponse): IRepository => ({
   id: repositoryResponse.id,
+  userId: repositoryResponse.owner.id,
   name: repositoryResponse.name,
   description: repositoryResponse.description,
-  htmlUrl: repositoryResponse.html_url,
   stargazersCount: repositoryResponse.stargazers_count,
 });
 
 // epics
-export const fetchRepositoryEpic = (action$: ActionsObservable<DomainAction>) =>
+export const fetchRepositoriesEpic = (
+  action$: ActionsObservable<DomainAction>
+) =>
   action$.pipe(
     filter(isOfType(RepositoriesActionTypes.FETCH_REPOSITORIES)),
     switchMap((action) =>
       ajax.getJSON<Array<IRepositoryResponse>>(action.payload.reposUrl).pipe(
         map((response: Array<IRepositoryResponse>) => response.map(Repository)),
-        map((repositories) => fetchRepositoryFulfilled(repositories))
+        map((repositories) =>
+          fetchRepositoriesFulfilled(action.payload.userId, repositories)
+        )
       )
     )
   );
@@ -54,10 +65,8 @@ export const fetchRepositoryEpic = (action$: ActionsObservable<DomainAction>) =>
 const allIds = (state = [], action: DomainAction) => {
   switch (action.type) {
     case RepositoriesActionTypes.FETCH_REPOSITORIES_FULFILLED:
-      const ids = action.payload.repositories.map(
-        (repository) => repository.id
-      );
-      return [...state, ...ids];
+      const set = new Set([...state, action.payload.userId]);
+      return [...set];
     default:
       return state;
   }
@@ -66,12 +75,9 @@ const allIds = (state = [], action: DomainAction) => {
 const byId = (state = {}, action: DomainAction) => {
   switch (action.type) {
     case RepositoriesActionTypes.FETCH_REPOSITORIES_FULFILLED:
-      const repositories = action.payload.repositories.map((repository) => ({
-        [repository.id]: repository,
-      }));
       return {
         ...state,
-        ...repositories,
+        [action.payload.userId]: action.payload.repositories,
       };
     default:
       return state;
@@ -79,3 +85,16 @@ const byId = (state = {}, action: DomainAction) => {
 };
 
 export const repositoriesReducer = combineReducers({ allIds, byId });
+
+// selectors
+
+const repositoriesSelector = (state: IDomainState) => state.repositories.byId;
+
+const userIdSelector = (_state: IDomainState, userId: number) => userId;
+
+export const userRepositoriesSelector = createSelector(
+  [repositoriesSelector, userIdSelector],
+  (repositories, userId) => {
+    return repositories[userId];
+  }
+);
